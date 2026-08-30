@@ -7,7 +7,13 @@
     <link rel="stylesheet" href="styles.css" /><title>MiroFish API Guides</title>
   </head>
   <body>
-    <header class="site-header"><a class="brand" href="index.html" aria-label="MiroFish API documentation home"><span class="brand-mark"><img src="assets/orbital-swarm-mark.png" alt="MiroFish" width="44" height="44" /></span><span class="brand-copy"><span class="brand-eyebrow">Predict Anything</span><span class="brand-name">MIROFISH <em>API</em></span></span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button><nav id="site-nav" class="site-nav" aria-label="Primary navigation"><a class="active" href="index.html">Guides</a><a href="reference.html">API Reference</a><a href="openapi.yaml">OpenAPI YAML</a><a class="nav-cta" href="https://mirofish.my/api-keys">Get an API key</a></nav></header>
+    <header class="site-header">
+      <div class="site-header-primary">
+        <a class="brand" href="index.html" aria-label="MiroFish API documentation home"><span class="brand-mark"><img src="assets/orbital-swarm-mark.png" alt="MiroFish" width="44" height="44" /></span><span class="brand-copy"><span class="brand-eyebrow">Predict Anything</span><span class="brand-name">MIROFISH <em>API</em></span></span></a>
+        <div class="header-actions"><a class="header-link" href="https://mirofish.my">MiroFish app</a><a class="header-link" href="mailto:support@mirofish.my">Support</a><a class="header-cta" href="https://mirofish.my/api-keys">Get an API key</a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button></div>
+      </div>
+      <nav id="site-nav" class="site-nav" aria-label="Primary navigation"><div class="site-nav-inner"><a class="active" href="index.html">Guides</a><a href="reference.html">API Reference</a><a href="openapi.yaml">OpenAPI YAML</a></div></nav>
+    </header>
     <main class="shell docs-layout">
       <aside class="docs-toc" aria-label="On this page"><div class="toc-title">On this page</div><a href="#authentication">Authentication</a><a href="#credits">API credits</a><a href="#upload">1. Upload sources</a><a href="#project">2. Create a project</a><a href="#graph">3. Read the graph</a><a href="#simulation">4. Start a simulation</a><a href="#report">5. Generate a report</a><a href="#webhooks">Webhooks</a><a href="#javascript">JavaScript</a><a href="#python">Python</a><a href="#errors">Errors</a></aside>
       <article class="docs-content">
@@ -113,6 +119,10 @@ print(response.json()["project"]["status"])</code></pre>
         <p>Use the HTTP status and the response body's <code>error_code</code> to decide whether to retry. Retry transient 5xx responses with backoff and the same idempotency key. A <code>402 API_INSUFFICIENT_CREDITS</code> response includes the required credits, current balance, and top-up URL. Never retry a request with a new idempotency key unless you intend to create a new operation.</p>
         <div class="docs-callout"><strong>Machine-readable contract:</strong> the complete OpenAPI 3.1 document is available as <a href="openapi.yaml">openapi.yaml</a> and rendered in the <a href="reference.html">API Reference</a>.</div>
       </article>
+      <aside class="docs-tools" aria-label="Page tools">
+        <div class="tools-card"><div class="toc-title">On this page</div><a href="#authentication">Authentication</a><a href="#credits">API credits</a><a href="#upload">Upload sources</a><a href="#simulation">Simulation</a><a href="#report">Report</a><a href="#webhooks">Webhooks</a></div>
+        <button class="copy-page" id="copy-page" type="button">Copy page link</button>
+      </aside>
     </main>
     <footer class="site-footer shell"><span>© <span data-year>2026</span> MiroFish</span><span>Public API documentation · English</span><a href="openapi.yaml">Download OpenAPI</a></footer>
     <script src="script.js"></script>

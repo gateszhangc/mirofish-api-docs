@@ -10,4 +10,18 @@
   document.querySelectorAll('[data-year]').forEach(function (node) {
     node.textContent = String(new Date().getFullYear());
   });
+
+  const copyPage = document.querySelector('#copy-page');
+  if (copyPage) {
+    copyPage.addEventListener('click', async function () {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        copyPage.textContent = 'Page link copied';
+        window.setTimeout(function () { copyPage.textContent = 'Copy page link'; }, 1800);
+      } catch {
+        copyPage.textContent = 'Copy unavailable';
+        window.setTimeout(function () { copyPage.textContent = 'Copy page link'; }, 1800);
+      }
+    });
+  }
 }());
