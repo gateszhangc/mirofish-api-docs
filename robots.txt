@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://gateszhangc.github.io/mirofish-api-docs/sitemap.xml

@@ -1,0 +1,426 @@
+openapi: 3.1.0
+info:
+  title: MiroFish API
+  version: 1.1.0
+  description: The same project, graph, simulation, report, and interaction engine used by the MiroFish web application, with an independent prepaid balance for Bearer API calls.
+servers:
+  - url: https://mirofish.my
+security:
+  - bearerAuth: []
+tags:
+  - name: Uploads
+  - name: Projects
+  - name: Simulations
+  - name: Reports
+  - name: Webhooks
+  - name: Billing
+  - name: Usage
+paths:
+  /api/mirofish/uploads/init:
+    post:
+      tags: [Uploads]
+      operationId: initializeUploads
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UploadInitRequest' }
+      responses:
+        '200': { description: Presigned upload URLs }
+        '400': { $ref: '#/components/responses/Error' }
+        '401': { $ref: '#/components/responses/Error' }
+  /api/mirofish/uploads/complete:
+    post:
+      tags: [Uploads]
+      operationId: completeUploads
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [clientSubmissionId, uploadIds]
+              properties:
+                clientSubmissionId: { type: string }
+                uploadIds: { type: array, items: { type: string } }
+      responses:
+        '200': { description: Verified uploads }
+        '400': { $ref: '#/components/responses/Error' }
+  /api/mirofish/projects:
+    post:
+      tags: [Projects]
+      operationId: createProject
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateProjectRequest' }
+      responses:
+        '200': { description: Project accepted, content: { application/json: { schema: { $ref: '#/components/schemas/ProjectResponse' } } } }
+        '402': { $ref: '#/components/responses/Error' }
+  /api/mirofish/projects/import-url:
+    post:
+      tags: [Projects]
+      operationId: createProjectFromUrl
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prompt, clientSubmissionId, url]
+              properties:
+                prompt: { type: string, minLength: 1 }
+                clientSubmissionId: { type: string, maxLength: 255 }
+                url: { type: string, format: uri, maxLength: 4096 }
+      responses:
+        '200': { description: Remote source imported and project accepted }
+        '400': { $ref: '#/components/responses/Error' }
+        '402': { $ref: '#/components/responses/Error' }
+  /api/mirofish/history:
+    get:
+      tags: [Projects]
+      operationId: listProjects
+      responses:
+        '200': { description: Projects belonging to the authenticated account }
+  /api/mirofish/projects/{projectId}:
+    get:
+      tags: [Projects]
+      operationId: getProject
+      parameters: [{ $ref: '#/components/parameters/ProjectId' }]
+      responses:
+        '200': { description: Current project state, content: { application/json: { schema: { $ref: '#/components/schemas/ProjectResponse' } } } }
+        '404': { $ref: '#/components/responses/Error' }
+  /api/mirofish/projects/{projectId}/ontology:
+    get:
+      tags: [Projects]
+      operationId: getOntology
+      parameters: [{ $ref: '#/components/parameters/ProjectId' }]
+      responses:
+        '200': { description: Ontology and analysis summary }
+  /api/mirofish/graphs/{graphId}:
+    get:
+      tags: [Projects]
+      operationId: getGraph
+      parameters:
+        - { name: graphId, in: path, required: true, schema: { type: string } }
+        - { name: projectId, in: query, required: false, schema: { type: string } }
+      responses:
+        '200': { description: Graph nodes and edges }
+  /api/mirofish/simulations/{simulationId}:
+    get:
+      tags: [Simulations]
+      operationId: getSimulation
+      parameters: [{ $ref: '#/components/parameters/SimulationId' }]
+      responses:
+        '200': { description: Simulation state and progress }
+  /api/mirofish/simulations/{simulationId}/start:
+    post:
+      tags: [Simulations]
+      operationId: startSimulation
+      parameters:
+        - { $ref: '#/components/parameters/SimulationId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      responses:
+        '200': { description: Simulation queued or running }
+        '402': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+  /api/mirofish/simulations/{simulationId}/profiles:
+    get:
+      tags: [Simulations]
+      operationId: getSimulationProfiles
+      parameters:
+        - { $ref: '#/components/parameters/SimulationId' }
+        - { name: platform, in: query, schema: { type: string, enum: [reddit, twitter], default: reddit } }
+      responses:
+        '200': { description: Generated agent profiles }
+  /api/mirofish/simulations/{simulationId}/actions:
+    get:
+      tags: [Simulations]
+      operationId: getSimulationActions
+      parameters:
+        - { $ref: '#/components/parameters/SimulationId' }
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/Offset' }
+        - { name: platform, in: query, schema: { type: string, enum: [reddit, twitter] } }
+        - { name: round_num, in: query, schema: { type: integer, minimum: 0 } }
+      responses:
+        '200': { description: Agent action history }
+  /api/mirofish/simulations/{simulationId}/posts:
+    get:
+      tags: [Simulations]
+      operationId: getSimulationPosts
+      parameters:
+        - { $ref: '#/components/parameters/SimulationId' }
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/Offset' }
+        - { name: platform, in: query, schema: { type: string, enum: [reddit, twitter], default: reddit } }
+      responses:
+        '200': { description: Platform posts }
+  /api/mirofish/simulations/{simulationId}/timeline:
+    get:
+      tags: [Simulations]
+      operationId: getSimulationTimeline
+      parameters:
+        - { $ref: '#/components/parameters/SimulationId' }
+        - { name: start_round, in: query, schema: { type: integer, minimum: 0 } }
+        - { name: end_round, in: query, schema: { type: integer, minimum: 0 } }
+      responses:
+        '200': { description: Round-level timeline }
+  /api/mirofish/simulations/{simulationId}/comments:
+    get:
+      tags: [Simulations]
+      operationId: getSimulationComments
+      parameters:
+        - { $ref: '#/components/parameters/SimulationId' }
+        - { $ref: '#/components/parameters/Limit' }
+        - { $ref: '#/components/parameters/Offset' }
+        - { name: post_id, in: query, schema: { type: string } }
+      responses:
+        '200': { description: Reddit comments generated during the simulation }
+  /api/mirofish/simulations/{simulationId}/agent-stats:
+    get:
+      tags: [Simulations]
+      operationId: getSimulationAgentStats
+      parameters: [{ $ref: '#/components/parameters/SimulationId' }]
+      responses:
+        '200': { description: Per-agent activity statistics }
+  /api/mirofish/reports/{reportId}:
+    get:
+      tags: [Reports]
+      operationId: getReport
+      parameters: [{ $ref: '#/components/parameters/ReportId' }]
+      responses:
+        '200': { description: Report state and content }
+    post:
+      tags: [Reports]
+      operationId: generateReport
+      parameters:
+        - { $ref: '#/components/parameters/ReportId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { forceRegenerate: { type: boolean, default: false } }
+      responses:
+        '200': { description: Report generation accepted }
+  /api/mirofish/reports/{reportId}/sections:
+    get:
+      tags: [Reports]
+      operationId: getReportSections
+      parameters: [{ $ref: '#/components/parameters/ReportId' }]
+      responses:
+        '200': { description: Generated report sections }
+  /api/mirofish/reports/{reportId}/agent-log:
+    get:
+      tags: [Reports]
+      operationId: getReportAgentLog
+      parameters:
+        - { $ref: '#/components/parameters/ReportId' }
+        - { name: from_line, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+      responses:
+        '200': { description: Sanitized product-level agent execution log }
+  /api/mirofish/reports/{reportId}/chat:
+    post:
+      tags: [Reports]
+      operationId: chatWithReport
+      parameters:
+        - { $ref: '#/components/parameters/ReportId' }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message, mode]
+              properties:
+                message: { type: string }
+                mode: { type: string, enum: [report-agent, world-character] }
+                speaker: { type: string }
+      responses:
+        '200': { description: Updated interaction messages }
+  /api/mirofish/webhooks:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhookEndpoints
+      responses: { '200': { description: Configured endpoints } }
+    post:
+      tags: [Webhooks]
+      operationId: createWebhookEndpoint
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url, events]
+              properties:
+                url: { type: string, format: uri, pattern: '^https://' }
+                description: { type: string, maxLength: 255 }
+                events: { type: array, items: { $ref: '#/components/schemas/WebhookEventType' } }
+      responses:
+        '201': { description: Endpoint plus one-time signing secret }
+  /api/mirofish/webhooks/{endpointId}:
+    patch:
+      tags: [Webhooks]
+      operationId: updateWebhookEndpoint
+      parameters:
+        - { name: endpointId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      responses: { '200': { description: Updated endpoint } }
+    delete:
+      tags: [Webhooks]
+      operationId: disableWebhookEndpoint
+      parameters:
+        - { name: endpointId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      responses: { '200': { description: Disabled endpoint } }
+  /api/mirofish/webhooks/deliveries:
+    get:
+      tags: [Webhooks]
+      operationId: listWebhookDeliveries
+      responses: { '200': { description: Recent delivery attempts } }
+  /api/mirofish/webhooks/deliveries/{deliveryId}/replay:
+    post:
+      tags: [Webhooks]
+      operationId: replayWebhookDelivery
+      parameters:
+        - { name: deliveryId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { $ref: '#/components/parameters/IdempotencyKey' }
+      responses: { '200': { description: Delivery returned to the pending queue } }
+  /api/mirofish/api-billing/balance:
+    get:
+      tags: [Billing]
+      operationId: getApiCreditBalance
+      responses:
+        '200':
+          description: Account-level API credit balance and available top-up packs
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ApiCreditBalance' }
+  /api/mirofish/api-billing/transactions:
+    get:
+      tags: [Billing]
+      operationId: listApiCreditTransactions
+      parameters:
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
+      responses:
+        '200': { description: API credit purchase, charge, and refund transactions }
+  /api/mirofish/api-usage:
+    get:
+      tags: [Usage]
+      operationId: getApiUsage
+      parameters:
+        - { name: from, in: query, schema: { type: string, format: date-time } }
+        - { name: to, in: query, schema: { type: string, format: date-time } }
+      responses:
+        '200': { description: Request and credit totals grouped by day }
+  /api/mirofish/api-logs:
+    get:
+      tags: [Usage]
+      operationId: listApiLogs
+      parameters:
+        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
+      responses:
+        '200': { description: Recent authenticated API request logs }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: MiroFish API key
+  parameters:
+    IdempotencyKey: { name: Idempotency-Key, in: header, required: false, schema: { type: string, maxLength: 255 } }
+    ProjectId: { name: projectId, in: path, required: true, schema: { type: string } }
+    SimulationId: { name: simulationId, in: path, required: true, schema: { type: string } }
+    ReportId: { name: reportId, in: path, required: true, schema: { type: string } }
+    Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500 } }
+    Offset: { name: offset, in: query, schema: { type: integer, minimum: 0 } }
+  responses:
+    Error:
+      description: API error
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+        error_code: { type: string }
+        request_id: { type: string }
+        required_credits: { type: integer }
+        balance: { type: integer }
+        top_up_url: { type: string }
+    ApiCreditBalance:
+      type: object
+      required: [balance, credits_never_expire, simulation_start_cost, packs]
+      properties:
+        balance: { type: integer, minimum: 0 }
+        credits_never_expire: { type: boolean, const: true }
+        simulation_start_cost: { type: integer, minimum: 1 }
+        top_up_url: { type: string }
+        packs:
+          type: array
+          items:
+            type: object
+            required: [product_id, amount, currency, credits]
+            properties:
+              product_id: { type: string }
+              amount: { type: integer, description: Minor currency units }
+              currency: { type: string }
+              credits: { type: integer }
+    UploadInitRequest:
+      type: object
+      required: [clientSubmissionId, files]
+      properties:
+        clientSubmissionId: { type: string }
+        files:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [fileId, name, size, contentType, sha256]
+            properties:
+              fileId: { type: string }
+              name: { type: string }
+              size: { type: integer, minimum: 1 }
+              contentType: { type: string }
+              sha256: { type: string, pattern: '^[A-Fa-f0-9]{64}$' }
+    CreateProjectRequest:
+      type: object
+      required: [prompt, clientSubmissionId, uploadIds]
+      properties:
+        prompt: { type: string, minLength: 1 }
+        clientSubmissionId: { type: string }
+        uploadIds: { type: array, minItems: 1, items: { type: string } }
+    ProjectResponse:
+      type: object
+      required: [project]
+      properties:
+        project:
+          type: object
+          additionalProperties: true
+          required: [projectId, status, reportId]
+          properties:
+            projectId: { type: string }
+            graphId: { type: string }
+            simulationId: { type: string }
+            reportId: { type: string }
+            status:
+              type: string
+              enum: [graph_generating, graph_ready, simulation_idle, simulation_running, simulation_ready, report_generating, report_ready, failed]
+    WebhookEventType:
+      type: string
+      enum: ['*', project.graph_ready, project.failed, simulation.completed, simulation.failed, report.completed, report.failed]

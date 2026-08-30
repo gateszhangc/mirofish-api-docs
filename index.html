@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Public English documentation for the MiroFish simulation API." />
+    <meta name="theme-color" content="#0b1020" />
+    <link rel="canonical" href="https://gateszhangc.github.io/mirofish-api-docs/" />
+    <link rel="stylesheet" href="styles.css" />
+    <title>MiroFish API Documentation</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="MiroFish API Documentation home">
+        <span class="brand-mark">M</span>
+        <span>MiroFish <em>API</em></span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+      <nav id="site-nav" class="site-nav" aria-label="Primary navigation">
+        <a class="active" href="index.html">Overview</a>
+        <a href="api-guide.html">Guides</a>
+        <a href="reference.html">API Reference</a>
+        <a href="openapi.yaml">OpenAPI YAML</a>
+        <a class="nav-cta" href="https://mirofish.my/api-keys">Get an API key</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero shell">
+        <div class="eyebrow">MiroFish API · v1.1.0</div>
+        <h1>Run the same simulations as the MiroFish web app.</h1>
+        <p class="hero-copy">
+          Upload source material, create a project, build its ontology and graph, run a simulation,
+          and retrieve the report through one authenticated HTTP API.
+        </p>
+        <div class="hero-actions">
+          <a class="button primary" href="api-guide.html">Read the quickstart <span aria-hidden="true">→</span></a>
+          <a class="button secondary" href="reference.html">Browse API reference</a>
+        </div>
+        <div class="hero-note"><span class="status-dot"></span> Production base URL: <code>https://mirofish.my</code></div>
+      </section>
+
+      <section class="shell section-grid intro-grid">
+        <div>
+          <div class="section-kicker">The mental model</div>
+          <h2>One page-equivalent workflow, made programmable.</h2>
+          <p>
+            API-created projects use the same project, graph, simulation, and report engine as the
+            MiroFish web application. The API adds an independent prepaid credit balance so
+            automation can run without a browser session.
+          </p>
+        </div>
+        <aside class="callout">
+          <div class="callout-label">Before you begin</div>
+          <p>Create an API key in your account, keep it server-side, and send it as a Bearer token on every request.</p>
+          <a href="api-guide.html#authentication">Authentication details <span aria-hidden="true">↗</span></a>
+        </aside>
+      </section>
+
+      <section class="shell workflow-section">
+        <div class="section-kicker">Five stages</div>
+        <h2>From source file to decision-ready report.</h2>
+        <div class="workflow-grid">
+          <a class="workflow-card" href="api-guide.html#upload">
+            <span class="step-number">01</span><h3>Upload</h3><p>Initialize a presigned upload session, send exact bytes, then verify.</p>
+          </a>
+          <a class="workflow-card" href="api-guide.html#project">
+            <span class="step-number">02</span><h3>Project</h3><p>Submit a prompt and uploaded sources to create a project.</p>
+          </a>
+          <a class="workflow-card" href="api-guide.html#graph">
+            <span class="step-number">03</span><h3>Graph</h3><p>Poll until ontology and graph construction are ready.</p>
+          </a>
+          <a class="workflow-card" href="api-guide.html#simulation">
+            <span class="step-number">04</span><h3>Simulation</h3><p>Start once, then read progress and intermediate product signals.</p>
+          </a>
+          <a class="workflow-card" href="api-guide.html#report">
+            <span class="step-number">05</span><h3>Report</h3><p>Generate sections, read agent logs, and continue with ReportAgent chat.</p>
+          </a>
+        </div>
+      </section>
+
+      <section class="shell code-section">
+        <div class="code-heading">
+          <div><div class="section-kicker">First request</div><h2>Check a project from your backend.</h2></div>
+          <a href="api-guide.html#javascript">More examples <span aria-hidden="true">↗</span></a>
+        </div>
+        <pre><code><span class="code-muted">const</span> response = <span class="code-muted">await</span> fetch(
+  <span class="code-string">"https://mirofish.my/api/mirofish/projects/PROJECT_ID"</span>,
+  { headers: { Authorization: <span class="code-string">`Bearer ${process.env.MIROFISH_API_KEY}`</span> } }
+);
+
+<span class="code-muted">if</span> (!response.ok) <span class="code-muted">throw new</span> Error(<span class="code-muted">await</span> response.text());
+<span class="code-muted">const</span> { project } = <span class="code-muted">await</span> response.json();
+console.log(project.status);</code></pre>
+      </section>
+
+      <section class="shell section-grid details-grid">
+        <div>
+          <div class="section-kicker">Credits and safety</div>
+          <h2>Built for automation without hidden surprises.</h2>
+          <ul class="feature-list">
+            <li><strong>Independent balance.</strong> API credits are shared by the account's keys and never expire.</li>
+            <li><strong>Idempotent writes.</strong> Reuse an <code>Idempotency-Key</code> when retrying the same state-changing request.</li>
+            <li><strong>Traceable responses.</strong> Authenticated responses include <code>X-Request-Id</code>.</li>
+            <li><strong>Webhooks.</strong> Receive signed notifications for graph, simulation, and report milestones.</li>
+          </ul>
+        </div>
+        <div class="endpoint-panel">
+          <div class="section-kicker">Endpoint groups</div>
+          <div class="endpoint-row"><span>Uploads</span><code>/api/mirofish/uploads/*</code></div>
+          <div class="endpoint-row"><span>Projects &amp; graphs</span><code>/api/mirofish/projects/*</code></div>
+          <div class="endpoint-row"><span>Simulations</span><code>/api/mirofish/simulations/*</code></div>
+          <div class="endpoint-row"><span>Reports &amp; chat</span><code>/api/mirofish/reports/*</code></div>
+          <div class="endpoint-row"><span>Webhooks</span><code>/api/mirofish/webhooks/*</code></div>
+          <div class="endpoint-row"><span>Billing</span><code>/api/mirofish/api-billing/*</code></div>
+        </div>
+      </section>
+
+      <section class="shell bottom-cta">
+        <div><div class="section-kicker">Keep building</div><h2>Use the guide, then go deeper in the contract.</h2></div>
+        <div class="hero-actions"><a class="button primary" href="api-guide.html">Open guides</a><a class="button secondary" href="reference.html">Open reference</a></div>
+      </section>
+    </main>
+
+    <footer class="site-footer shell"><span>© <span data-year>2026</span> MiroFish</span><span>Public API documentation · English</span><a href="openapi.yaml">Download OpenAPI</a></footer>
+    <script src="script.js"></script>
+  </body>
+</html>
