@@ -1,127 +1,119 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Public English documentation for the MiroFish simulation API." />
-    <meta name="theme-color" content="#0b1020" />
+    <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="MiroFish API quickstart and integration guide." />
     <link rel="canonical" href="https://gateszhangc.github.io/mirofish-api-docs/" />
-    <link rel="stylesheet" href="styles.css" />
-    <title>MiroFish API Documentation</title>
+    <link rel="stylesheet" href="styles.css" /><title>MiroFish API Guides</title>
   </head>
   <body>
-    <header class="site-header">
-      <a class="brand" href="index.html" aria-label="MiroFish API Documentation home">
-        <span class="brand-mark">M</span>
-        <span>MiroFish <em>API</em></span>
-      </a>
-      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
-      <nav id="site-nav" class="site-nav" aria-label="Primary navigation">
-        <a class="active" href="index.html">Overview</a>
-        <a href="api-guide.html">Guides</a>
-        <a href="reference.html">API Reference</a>
-        <a href="openapi.yaml">OpenAPI YAML</a>
-        <a class="nav-cta" href="https://mirofish.my/api-keys">Get an API key</a>
-      </nav>
-    </header>
+    <header class="site-header"><a class="brand" href="index.html"><span class="brand-mark">M</span><span>MiroFish <em>API</em></span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button><nav id="site-nav" class="site-nav" aria-label="Primary navigation"><a class="active" href="index.html">Guides</a><a href="reference.html">API Reference</a><a href="openapi.yaml">OpenAPI YAML</a><a class="nav-cta" href="https://mirofish.my/api-keys">Get an API key</a></nav></header>
+    <main class="shell docs-layout">
+      <aside class="docs-toc" aria-label="On this page"><div class="toc-title">On this page</div><a href="#authentication">Authentication</a><a href="#credits">API credits</a><a href="#upload">1. Upload sources</a><a href="#project">2. Create a project</a><a href="#graph">3. Read the graph</a><a href="#simulation">4. Start a simulation</a><a href="#report">5. Generate a report</a><a href="#webhooks">Webhooks</a><a href="#javascript">JavaScript</a><a href="#python">Python</a><a href="#errors">Errors</a></aside>
+      <article class="docs-content">
+        <div class="section-kicker">Guides</div><h1>Integrate MiroFish into your backend.</h1>
+        <p class="lede">The API exposes the same workflow used by the MiroFish web application: source intake, ontology and graph construction, simulation, and report interaction.</p>
 
-    <main>
-      <section class="hero shell">
-        <div class="eyebrow">MiroFish API · v1.1.0</div>
-        <h1>Run the same simulations as the MiroFish web app.</h1>
-        <p class="hero-copy">
-          Upload source material, create a project, build its ontology and graph, run a simulation,
-          and retrieve the report through one authenticated HTTP API.
-        </p>
-        <div class="hero-actions">
-          <a class="button primary" href="api-guide.html">Read the quickstart <span aria-hidden="true">→</span></a>
-          <a class="button secondary" href="reference.html">Browse API reference</a>
-        </div>
-        <div class="hero-note"><span class="status-dot"></span> Production base URL: <code>https://mirofish.my</code></div>
-      </section>
+        <h2 id="authentication">Authentication</h2>
+        <p>Create a key at <a href="https://mirofish.my/api-keys">mirofish.my/api-keys</a>. Store it in a secret manager and send it on every request:</p>
+        <pre><code>Authorization: Bearer mf_live_...</code></pre>
+        <p>Keys are shown in full only when created. API responses include <code>X-Request-Id</code>. State-changing calls accept <code>Idempotency-Key</code>; reuse the same value when retrying the same request.</p>
 
-      <section class="shell section-grid intro-grid">
-        <div>
-          <div class="section-kicker">The mental model</div>
-          <h2>One page-equivalent workflow, made programmable.</h2>
-          <p>
-            API-created projects use the same project, graph, simulation, and report engine as the
-            MiroFish web application. The API adds an independent prepaid credit balance so
-            automation can run without a browser session.
-          </p>
-        </div>
-        <aside class="callout">
-          <div class="callout-label">Before you begin</div>
-          <p>Create an API key in your account, keep it server-side, and send it as a Bearer token on every request.</p>
-          <a href="api-guide.html#authentication">Authentication details <span aria-hidden="true">↗</span></a>
-        </aside>
-      </section>
+        <h2 id="credits">API credits</h2>
+        <p>API credits are prepaid, account-level credits shared by all keys and separate from web subscriptions. The first accepted simulation start costs 100 credits. Project creation checks affordability but does not deduct; reads and report chat are not charged.</p>
+        <div class="info-table"><div><span>Balance</span><code>GET /api/mirofish/api-billing/balance</code></div><div><span>Transactions</span><code>GET /api/mirofish/api-billing/transactions</code></div><div><span>Top-up page</span><a href="https://mirofish.my/api-billing">mirofish.my/api-billing</a></div></div>
 
-      <section class="shell workflow-section">
-        <div class="section-kicker">Five stages</div>
-        <h2>From source file to decision-ready report.</h2>
-        <div class="workflow-grid">
-          <a class="workflow-card" href="api-guide.html#upload">
-            <span class="step-number">01</span><h3>Upload</h3><p>Initialize a presigned upload session, send exact bytes, then verify.</p>
-          </a>
-          <a class="workflow-card" href="api-guide.html#project">
-            <span class="step-number">02</span><h3>Project</h3><p>Submit a prompt and uploaded sources to create a project.</p>
-          </a>
-          <a class="workflow-card" href="api-guide.html#graph">
-            <span class="step-number">03</span><h3>Graph</h3><p>Poll until ontology and graph construction are ready.</p>
-          </a>
-          <a class="workflow-card" href="api-guide.html#simulation">
-            <span class="step-number">04</span><h3>Simulation</h3><p>Start once, then read progress and intermediate product signals.</p>
-          </a>
-          <a class="workflow-card" href="api-guide.html#report">
-            <span class="step-number">05</span><h3>Report</h3><p>Generate sections, read agent logs, and continue with ReportAgent chat.</p>
-          </a>
-        </div>
-      </section>
+        <h2 id="upload">1. Upload sources</h2>
+        <p>Calculate each file's SHA-256 before initializing an upload session. PDF, Markdown, and text files are accepted, with a combined limit of 50 MB per project.</p>
+        <pre><code>curl -X POST https://mirofish.my/api/mirofish/uploads/init \
+  -H "Authorization: Bearer $MIROFISH_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: upload-init-001" \
+  -d '{
+    "clientSubmissionId":"submission-001",
+    "files":[{
+      "fileId":"brief-1",
+      "name":"market-brief.pdf",
+      "size":123456,
+      "contentType":"application/pdf",
+      "sha256":"64-lowercase-or-uppercase-hex-characters"
+    }]
+  }'</code></pre>
+        <p>PUT the exact bytes to each returned <code>uploadUrl</code> with the returned headers, then verify:</p>
+        <pre><code>curl -X POST https://mirofish.my/api/mirofish/uploads/complete \
+  -H "Authorization: Bearer $MIROFISH_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: upload-complete-001" \
+  -d '{"clientSubmissionId":"submission-001","uploadIds":["upload_..."]}'</code></pre>
+        <p>For a publicly downloadable source, <code>POST /api/mirofish/projects/import-url</code> is a shortcut that follows the same project and quota path.</p>
 
-      <section class="shell code-section">
-        <div class="code-heading">
-          <div><div class="section-kicker">First request</div><h2>Check a project from your backend.</h2></div>
-          <a href="api-guide.html#javascript">More examples <span aria-hidden="true">↗</span></a>
-        </div>
-        <pre><code><span class="code-muted">const</span> response = <span class="code-muted">await</span> fetch(
-  <span class="code-string">"https://mirofish.my/api/mirofish/projects/PROJECT_ID"</span>,
-  { headers: { Authorization: <span class="code-string">`Bearer ${process.env.MIROFISH_API_KEY}`</span> } }
-);
+        <h2 id="project">2. Create a project</h2>
+        <pre><code>curl -X POST https://mirofish.my/api/mirofish/projects \
+  -H "Authorization: Bearer $MIROFISH_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: project-001" \
+  -d '{
+    "prompt":"Simulate how the target market may react to this launch.",
+    "clientSubmissionId":"submission-001",
+    "uploadIds":["upload_..."]
+  }'</code></pre>
+        <p>Poll <code>GET /api/mirofish/projects/{projectId}</code> until the project reaches <code>graph_ready</code> or <code>simulation_idle</code>.</p>
 
-<span class="code-muted">if</span> (!response.ok) <span class="code-muted">throw new</span> Error(<span class="code-muted">await</span> response.text());
-<span class="code-muted">const</span> { project } = <span class="code-muted">await</span> response.json();
+        <h2 id="graph">3. Read the graph</h2>
+        <p>Once the graph is ready, retrieve the generated ontology and graph:</p>
+        <ul><li><code>GET /api/mirofish/projects/{projectId}/ontology</code></li><li><code>GET /api/mirofish/graphs/{graphId}?projectId={projectId}</code></li></ul>
+
+        <h2 id="simulation">4. Start a simulation</h2>
+        <pre><code>curl -X POST https://mirofish.my/api/mirofish/simulations/{simulationId}/start \
+  -H "Authorization: Bearer $MIROFISH_API_KEY" \
+  -H "Idempotency-Key: simulation-start-001"</code></pre>
+        <p>The first accepted start charges the account once. Repeating the same start is idempotent. Poll <code>GET /api/mirofish/simulations/{simulationId}</code> for status and progress. Intermediate product signals are available from the profiles, actions, posts, timeline, comments, and agent-stats endpoints in the reference.</p>
+
+        <h2 id="report">5. Generate a report</h2>
+        <pre><code>curl -X POST https://mirofish.my/api/mirofish/reports/{reportId} \
+  -H "Authorization: Bearer $MIROFISH_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: report-generate-001" \
+  -d '{"forceRegenerate":false}'</code></pre>
+        <p>Read the report, sections, and sanitized agent log while it is generated. After completion, <code>POST /api/mirofish/reports/{reportId}/chat</code> supports the same <code>report-agent</code> and <code>world-character</code> modes as the web application.</p>
+
+        <h2 id="webhooks">Webhooks</h2>
+        <p>Register an HTTPS endpoint for <code>project.graph_ready</code>, <code>simulation.completed</code>, or <code>report.completed</code>. The signing secret is returned once. Verify <code>v1</code> as HMAC-SHA256 of <code>&lt;timestamp&gt;.&lt;raw-request-body&gt;</code>, reject old timestamps, and deduplicate with <code>X-MiroFish-Event-Id</code>.</p>
+        <pre><code>curl -X POST https://mirofish.my/api/mirofish/webhooks \
+  -H "Authorization: Bearer $MIROFISH_API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: webhook-endpoint-001" \
+  -d '{
+    "url":"https://api.example.com/webhooks/mirofish",
+    "events":["project.graph_ready","simulation.completed","report.completed"]
+  }'</code></pre>
+
+        <h2 id="javascript">JavaScript</h2>
+        <pre><code>const apiKey = process.env.MIROFISH_API_KEY;
+const response = await fetch("https://mirofish.my/api/mirofish/projects/PROJECT_ID", {
+  headers: { Authorization: `Bearer ${apiKey}` },
+});
+if (!response.ok) throw new Error(await response.text());
+const { project } = await response.json();
 console.log(project.status);</code></pre>
-      </section>
 
-      <section class="shell section-grid details-grid">
-        <div>
-          <div class="section-kicker">Credits and safety</div>
-          <h2>Built for automation without hidden surprises.</h2>
-          <ul class="feature-list">
-            <li><strong>Independent balance.</strong> API credits are shared by the account's keys and never expire.</li>
-            <li><strong>Idempotent writes.</strong> Reuse an <code>Idempotency-Key</code> when retrying the same state-changing request.</li>
-            <li><strong>Traceable responses.</strong> Authenticated responses include <code>X-Request-Id</code>.</li>
-            <li><strong>Webhooks.</strong> Receive signed notifications for graph, simulation, and report milestones.</li>
-          </ul>
-        </div>
-        <div class="endpoint-panel">
-          <div class="section-kicker">Endpoint groups</div>
-          <div class="endpoint-row"><span>Uploads</span><code>/api/mirofish/uploads/*</code></div>
-          <div class="endpoint-row"><span>Projects &amp; graphs</span><code>/api/mirofish/projects/*</code></div>
-          <div class="endpoint-row"><span>Simulations</span><code>/api/mirofish/simulations/*</code></div>
-          <div class="endpoint-row"><span>Reports &amp; chat</span><code>/api/mirofish/reports/*</code></div>
-          <div class="endpoint-row"><span>Webhooks</span><code>/api/mirofish/webhooks/*</code></div>
-          <div class="endpoint-row"><span>Billing</span><code>/api/mirofish/api-billing/*</code></div>
-        </div>
-      </section>
+        <h2 id="python">Python</h2>
+        <pre><code>import os
+import requests
 
-      <section class="shell bottom-cta">
-        <div><div class="section-kicker">Keep building</div><h2>Use the guide, then go deeper in the contract.</h2></div>
-        <div class="hero-actions"><a class="button primary" href="api-guide.html">Open guides</a><a class="button secondary" href="reference.html">Open reference</a></div>
-      </section>
+response = requests.get(
+    "https://mirofish.my/api/mirofish/projects/PROJECT_ID",
+    headers={"Authorization": f"Bearer {os.environ['MIROFISH_API_KEY']}"},
+    timeout=30,
+)
+response.raise_for_status()
+print(response.json()["project"]["status"])</code></pre>
+
+        <h2 id="errors">Errors and retries</h2>
+        <p>Use the HTTP status and the response body's <code>error_code</code> to decide whether to retry. Retry transient 5xx responses with backoff and the same idempotency key. A <code>402 API_INSUFFICIENT_CREDITS</code> response includes the required credits, current balance, and top-up URL. Never retry a request with a new idempotency key unless you intend to create a new operation.</p>
+        <div class="docs-callout"><strong>Machine-readable contract:</strong> the complete OpenAPI 3.1 document is available as <a href="openapi.yaml">openapi.yaml</a> and rendered in the <a href="reference.html">API Reference</a>.</div>
+      </article>
     </main>
-
     <footer class="site-footer shell"><span>© <span data-year>2026</span> MiroFish</span><span>Public API documentation · English</span><a href="openapi.yaml">Download OpenAPI</a></footer>
     <script src="script.js"></script>
   </body>
