@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: MiroFish API
-  version: 1.1.0
+  version: 1.2.0
   description: The same project, graph, simulation, report, and interaction engine used by the MiroFish web application, with an independent prepaid balance for Bearer API calls.
 servers:
   - url: https://mirofish.my
@@ -20,21 +20,21 @@ paths:
     post:
       tags: [Uploads]
       operationId: initializeUploads
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/UploadInitRequest' }
+            schema: { $ref: "#/components/schemas/UploadInitRequest" }
       responses:
-        '200': { description: Presigned upload URLs }
-        '400': { $ref: '#/components/responses/Error' }
-        '401': { $ref: '#/components/responses/Error' }
+        "200": { description: Presigned upload URLs }
+        "400": { $ref: "#/components/responses/Error" }
+        "401": { $ref: "#/components/responses/Error" }
   /api/mirofish/uploads/complete:
     post:
       tags: [Uploads]
       operationId: completeUploads
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
       requestBody:
         required: true
         content:
@@ -46,26 +46,34 @@ paths:
                 clientSubmissionId: { type: string }
                 uploadIds: { type: array, items: { type: string } }
       responses:
-        '200': { description: Verified uploads }
-        '400': { $ref: '#/components/responses/Error' }
+        "200": { description: Verified uploads }
+        "400": { $ref: "#/components/responses/Error" }
   /api/mirofish/projects:
     post:
       tags: [Projects]
       operationId: createProject
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/CreateProjectRequest' }
+            schema: { $ref: "#/components/schemas/CreateProjectRequest" }
       responses:
-        '200': { description: Project accepted, content: { application/json: { schema: { $ref: '#/components/schemas/ProjectResponse' } } } }
-        '402': { $ref: '#/components/responses/Error' }
+        "200":
+          {
+            description: Project accepted,
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/ProjectResponse" } },
+              },
+          }
+        "402": { $ref: "#/components/responses/Error" }
   /api/mirofish/projects/import-url:
     post:
       tags: [Projects]
       operationId: createProjectFromUrl
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
       requestBody:
         required: true
         content:
@@ -78,130 +86,183 @@ paths:
                 clientSubmissionId: { type: string, maxLength: 255 }
                 url: { type: string, format: uri, maxLength: 4096 }
       responses:
-        '200': { description: Remote source imported and project accepted }
-        '400': { $ref: '#/components/responses/Error' }
-        '402': { $ref: '#/components/responses/Error' }
+        "200": { description: Remote source imported and project accepted }
+        "400": { $ref: "#/components/responses/Error" }
+        "402": { $ref: "#/components/responses/Error" }
   /api/mirofish/history:
     get:
       tags: [Projects]
       operationId: listProjects
       responses:
-        '200': { description: Projects belonging to the authenticated account }
+        "200": { description: Projects belonging to the authenticated account }
   /api/mirofish/projects/{projectId}:
     get:
       tags: [Projects]
       operationId: getProject
-      parameters: [{ $ref: '#/components/parameters/ProjectId' }]
+      parameters: [{ $ref: "#/components/parameters/ProjectId" }]
       responses:
-        '200': { description: Current project state, content: { application/json: { schema: { $ref: '#/components/schemas/ProjectResponse' } } } }
-        '404': { $ref: '#/components/responses/Error' }
+        "200":
+          {
+            description: Current project state,
+            content:
+              {
+                application/json:
+                  { schema: { $ref: "#/components/schemas/ProjectResponse" } },
+              },
+          }
+        "404": { $ref: "#/components/responses/Error" }
   /api/mirofish/projects/{projectId}/ontology:
     get:
       tags: [Projects]
       operationId: getOntology
-      parameters: [{ $ref: '#/components/parameters/ProjectId' }]
+      parameters: [{ $ref: "#/components/parameters/ProjectId" }]
       responses:
-        '200': { description: Ontology and analysis summary }
+        "200": { description: Ontology and analysis summary }
   /api/mirofish/graphs/{graphId}:
     get:
       tags: [Projects]
       operationId: getGraph
       parameters:
         - { name: graphId, in: path, required: true, schema: { type: string } }
-        - { name: projectId, in: query, required: false, schema: { type: string } }
+        - {
+            name: projectId,
+            in: query,
+            required: false,
+            schema: { type: string },
+          }
       responses:
-        '200': { description: Graph nodes and edges }
+        "200": { description: Graph nodes and edges }
   /api/mirofish/simulations/{simulationId}:
     get:
       tags: [Simulations]
       operationId: getSimulation
-      parameters: [{ $ref: '#/components/parameters/SimulationId' }]
+      parameters: [{ $ref: "#/components/parameters/SimulationId" }]
       responses:
-        '200': { description: Simulation state and progress }
+        "200":
+          description: Simulation state, progress, and completed-run aggregates
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [simulation]
+                properties:
+                  simulation: { $ref: "#/components/schemas/Simulation" }
   /api/mirofish/simulations/{simulationId}/start:
     post:
       tags: [Simulations]
       operationId: startSimulation
       parameters:
-        - { $ref: '#/components/parameters/SimulationId' }
-        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { $ref: "#/components/parameters/SimulationId" }
+        - { $ref: "#/components/parameters/IdempotencyKey" }
       responses:
-        '200': { description: Simulation queued or running }
-        '402': { $ref: '#/components/responses/Error' }
-        '429': { $ref: '#/components/responses/Error' }
+        "200":
+          description: Simulation queued or running. A simulation is charged at most once regardless of retries or idempotency-key expiry.
+          headers:
+            Idempotency-Key-Expires-At:
+              { $ref: "#/components/headers/IdempotencyKeyExpiresAt" }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [simulation]
+                properties:
+                  simulation: { $ref: "#/components/schemas/Simulation" }
+        "402": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
   /api/mirofish/simulations/{simulationId}/profiles:
     get:
       tags: [Simulations]
       operationId: getSimulationProfiles
       parameters:
-        - { $ref: '#/components/parameters/SimulationId' }
-        - { name: platform, in: query, schema: { type: string, enum: [reddit, twitter], default: reddit } }
+        - { $ref: "#/components/parameters/SimulationId" }
+        - {
+            name: platform,
+            in: query,
+            schema: { type: string, enum: [reddit, twitter], default: reddit },
+          }
       responses:
-        '200': { description: Generated agent profiles }
+        "200": { description: Generated agent profiles }
   /api/mirofish/simulations/{simulationId}/actions:
     get:
       tags: [Simulations]
       operationId: getSimulationActions
       parameters:
-        - { $ref: '#/components/parameters/SimulationId' }
-        - { $ref: '#/components/parameters/Limit' }
-        - { $ref: '#/components/parameters/Offset' }
-        - { name: platform, in: query, schema: { type: string, enum: [reddit, twitter] } }
+        - { $ref: "#/components/parameters/SimulationId" }
+        - { $ref: "#/components/parameters/Limit" }
+        - { $ref: "#/components/parameters/Offset" }
+        - {
+            name: platform,
+            in: query,
+            schema: { type: string, enum: [reddit, twitter] },
+          }
         - { name: round_num, in: query, schema: { type: integer, minimum: 0 } }
       responses:
-        '200': { description: Agent action history }
+        "200": { description: Agent action history }
   /api/mirofish/simulations/{simulationId}/posts:
     get:
       tags: [Simulations]
       operationId: getSimulationPosts
       parameters:
-        - { $ref: '#/components/parameters/SimulationId' }
-        - { $ref: '#/components/parameters/Limit' }
-        - { $ref: '#/components/parameters/Offset' }
-        - { name: platform, in: query, schema: { type: string, enum: [reddit, twitter], default: reddit } }
+        - { $ref: "#/components/parameters/SimulationId" }
+        - { $ref: "#/components/parameters/Limit" }
+        - { $ref: "#/components/parameters/Offset" }
+        - {
+            name: platform,
+            in: query,
+            schema: { type: string, enum: [reddit, twitter], default: reddit },
+          }
       responses:
-        '200': { description: Platform posts }
+        "200": { description: Platform posts }
   /api/mirofish/simulations/{simulationId}/timeline:
     get:
       tags: [Simulations]
       operationId: getSimulationTimeline
       parameters:
-        - { $ref: '#/components/parameters/SimulationId' }
-        - { name: start_round, in: query, schema: { type: integer, minimum: 0 } }
+        - { $ref: "#/components/parameters/SimulationId" }
+        - {
+            name: start_round,
+            in: query,
+            schema: { type: integer, minimum: 0 },
+          }
         - { name: end_round, in: query, schema: { type: integer, minimum: 0 } }
       responses:
-        '200': { description: Round-level timeline }
+        "200": { description: Round-level timeline }
   /api/mirofish/simulations/{simulationId}/comments:
     get:
       tags: [Simulations]
       operationId: getSimulationComments
       parameters:
-        - { $ref: '#/components/parameters/SimulationId' }
-        - { $ref: '#/components/parameters/Limit' }
-        - { $ref: '#/components/parameters/Offset' }
+        - { $ref: "#/components/parameters/SimulationId" }
+        - { $ref: "#/components/parameters/Limit" }
+        - { $ref: "#/components/parameters/Offset" }
         - { name: post_id, in: query, schema: { type: string } }
       responses:
-        '200': { description: Reddit comments generated during the simulation }
+        "200": { description: Reddit comments generated during the simulation }
   /api/mirofish/simulations/{simulationId}/agent-stats:
     get:
       tags: [Simulations]
       operationId: getSimulationAgentStats
-      parameters: [{ $ref: '#/components/parameters/SimulationId' }]
+      parameters: [{ $ref: "#/components/parameters/SimulationId" }]
       responses:
-        '200': { description: Per-agent activity statistics }
+        "200": { description: Per-agent activity statistics }
   /api/mirofish/reports/{reportId}:
     get:
       tags: [Reports]
       operationId: getReport
-      parameters: [{ $ref: '#/components/parameters/ReportId' }]
+      parameters: [{ $ref: "#/components/parameters/ReportId" }]
       responses:
-        '200': { description: Report state and content }
+        "200":
+          description: Current report.v1 resource
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Report" }
+        "503": { $ref: "#/components/responses/Error" }
     post:
       tags: [Reports]
       operationId: generateReport
       parameters:
-        - { $ref: '#/components/parameters/ReportId' }
-        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { $ref: "#/components/parameters/ReportId" }
+        - { $ref: "#/components/parameters/IdempotencyKey" }
       requestBody:
         content:
           application/json:
@@ -209,30 +270,67 @@ paths:
               type: object
               properties: { forceRegenerate: { type: boolean, default: false } }
       responses:
-        '200': { description: Report generation accepted }
+        "200":
+          description: Existing completed or failed report.v1 resource
+          headers:
+            Idempotency-Key-Expires-At:
+              { $ref: "#/components/headers/IdempotencyKeyExpiresAt" }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Report" }
+        "202":
+          description: Report generation accepted; report status is queued or generating
+          headers:
+            Idempotency-Key-Expires-At:
+              { $ref: "#/components/headers/IdempotencyKeyExpiresAt" }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Report" }
+        "503": { $ref: "#/components/responses/Error" }
   /api/mirofish/reports/{reportId}/sections:
     get:
       tags: [Reports]
       operationId: getReportSections
-      parameters: [{ $ref: '#/components/parameters/ReportId' }]
+      parameters: [{ $ref: "#/components/parameters/ReportId" }]
       responses:
-        '200': { description: Generated report sections }
+        "200": { description: Generated report sections }
   /api/mirofish/reports/{reportId}/agent-log:
     get:
       tags: [Reports]
       operationId: getReportAgentLog
       parameters:
-        - { $ref: '#/components/parameters/ReportId' }
-        - { name: from_line, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+        - { $ref: "#/components/parameters/ReportId" }
+        - {
+            name: from_line,
+            in: query,
+            schema: { type: integer, minimum: 0, default: 0 },
+          }
       responses:
-        '200': { description: Sanitized product-level agent execution log }
+        "200": { description: Sanitized product-level agent execution log }
   /api/mirofish/reports/{reportId}/chat:
+    get:
+      tags: [Reports]
+      operationId: listReportChatMessages
+      parameters:
+        - { $ref: "#/components/parameters/ReportId" }
+        - {
+            name: mode,
+            in: query,
+            required: false,
+            schema: { type: string, enum: [report-agent, world-character] },
+          }
+      responses:
+        "200":
+          description: Stored interaction history, optionally filtered by mode
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/InteractionMessageList" }
     post:
       tags: [Reports]
       operationId: chatWithReport
       parameters:
-        - { $ref: '#/components/parameters/ReportId' }
-        - { $ref: '#/components/parameters/IdempotencyKey' }
+        - { $ref: "#/components/parameters/ReportId" }
+        - { $ref: "#/components/parameters/IdempotencyKey" }
       requestBody:
         required: true
         content:
@@ -245,16 +343,16 @@ paths:
                 mode: { type: string, enum: [report-agent, world-character] }
                 speaker: { type: string }
       responses:
-        '200': { description: Updated interaction messages }
+        "200": { description: Updated interaction messages }
   /api/mirofish/webhooks:
     get:
       tags: [Webhooks]
       operationId: listWebhookEndpoints
-      responses: { '200': { description: Configured endpoints } }
+      responses: { "200": { description: Configured endpoints } }
     post:
       tags: [Webhooks]
       operationId: createWebhookEndpoint
-      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      parameters: [{ $ref: "#/components/parameters/IdempotencyKey" }]
       requestBody:
         required: true
         content:
@@ -263,58 +361,87 @@ paths:
               type: object
               required: [url, events]
               properties:
-                url: { type: string, format: uri, pattern: '^https://' }
+                url: { type: string, format: uri, pattern: "^https://" }
                 description: { type: string, maxLength: 255 }
-                events: { type: array, items: { $ref: '#/components/schemas/WebhookEventType' } }
+                events:
+                  {
+                    type: array,
+                    items: { $ref: "#/components/schemas/WebhookEventType" },
+                  }
       responses:
-        '201': { description: Endpoint plus one-time signing secret }
+        "201": { description: Endpoint plus one-time signing secret }
   /api/mirofish/webhooks/{endpointId}:
     patch:
       tags: [Webhooks]
       operationId: updateWebhookEndpoint
       parameters:
-        - { name: endpointId, in: path, required: true, schema: { type: string, format: uuid } }
-        - { $ref: '#/components/parameters/IdempotencyKey' }
-      responses: { '200': { description: Updated endpoint } }
+        - {
+            name: endpointId,
+            in: path,
+            required: true,
+            schema: { type: string, format: uuid },
+          }
+        - { $ref: "#/components/parameters/IdempotencyKey" }
+      responses: { "200": { description: Updated endpoint } }
     delete:
       tags: [Webhooks]
       operationId: disableWebhookEndpoint
       parameters:
-        - { name: endpointId, in: path, required: true, schema: { type: string, format: uuid } }
-        - { $ref: '#/components/parameters/IdempotencyKey' }
-      responses: { '200': { description: Disabled endpoint } }
+        - {
+            name: endpointId,
+            in: path,
+            required: true,
+            schema: { type: string, format: uuid },
+          }
+        - { $ref: "#/components/parameters/IdempotencyKey" }
+      responses: { "200": { description: Disabled endpoint } }
   /api/mirofish/webhooks/deliveries:
     get:
       tags: [Webhooks]
       operationId: listWebhookDeliveries
-      responses: { '200': { description: Recent delivery attempts } }
+      responses: { "200": { description: Recent delivery attempts } }
   /api/mirofish/webhooks/deliveries/{deliveryId}/replay:
     post:
       tags: [Webhooks]
       operationId: replayWebhookDelivery
       parameters:
-        - { name: deliveryId, in: path, required: true, schema: { type: string, format: uuid } }
-        - { $ref: '#/components/parameters/IdempotencyKey' }
-      responses: { '200': { description: Delivery returned to the pending queue } }
+        - {
+            name: deliveryId,
+            in: path,
+            required: true,
+            schema: { type: string, format: uuid },
+          }
+        - { $ref: "#/components/parameters/IdempotencyKey" }
+      responses:
+        { "200": { description: Delivery returned to the pending queue } }
   /api/mirofish/api-billing/balance:
     get:
       tags: [Billing]
       operationId: getApiCreditBalance
       responses:
-        '200':
+        "200":
           description: Account-level API credit balance and available top-up packs
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/ApiCreditBalance' }
+              schema: { $ref: "#/components/schemas/ApiCreditBalance" }
   /api/mirofish/api-billing/transactions:
     get:
       tags: [Billing]
       operationId: listApiCreditTransactions
       parameters:
-        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
-        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
+        - {
+            name: page,
+            in: query,
+            schema: { type: integer, minimum: 1, default: 1 },
+          }
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 100, default: 50 },
+          }
       responses:
-        '200': { description: API credit purchase, charge, and refund transactions }
+        "200":
+          { description: API credit purchase, charge, and refund transactions }
   /api/mirofish/api-usage:
     get:
       tags: [Usage]
@@ -323,16 +450,24 @@ paths:
         - { name: from, in: query, schema: { type: string, format: date-time } }
         - { name: to, in: query, schema: { type: string, format: date-time } }
       responses:
-        '200': { description: Request and credit totals grouped by day }
+        "200": { description: Request and credit totals grouped by day }
   /api/mirofish/api-logs:
     get:
       tags: [Usage]
       operationId: listApiLogs
       parameters:
-        - { name: page, in: query, schema: { type: integer, minimum: 1, default: 1 } }
-        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
+        - {
+            name: page,
+            in: query,
+            schema: { type: integer, minimum: 1, default: 1 },
+          }
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 100, default: 50 },
+          }
       responses:
-        '200': { description: Recent authenticated API request logs }
+        "200": { description: Recent authenticated API request logs }
 components:
   securitySchemes:
     bearerAuth:
@@ -340,18 +475,35 @@ components:
       scheme: bearer
       bearerFormat: MiroFish API key
   parameters:
-    IdempotencyKey: { name: Idempotency-Key, in: header, required: false, schema: { type: string, maxLength: 255 } }
-    ProjectId: { name: projectId, in: path, required: true, schema: { type: string } }
-    SimulationId: { name: simulationId, in: path, required: true, schema: { type: string } }
-    ReportId: { name: reportId, in: path, required: true, schema: { type: string } }
-    Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500 } }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      description: Retained for 24 hours within the authenticated account, HTTP method, and request path. Reuse with identical content replays the original response; reuse with different content returns 409. The simulationId-backed ledger prevents duplicate simulation charges even after this key expires.
+      schema: { type: string, maxLength: 255 }
+    ProjectId:
+      { name: projectId, in: path, required: true, schema: { type: string } }
+    SimulationId:
+      { name: simulationId, in: path, required: true, schema: { type: string } }
+    ReportId:
+      { name: reportId, in: path, required: true, schema: { type: string } }
+    Limit:
+      {
+        name: limit,
+        in: query,
+        schema: { type: integer, minimum: 1, maximum: 500 },
+      }
     Offset: { name: offset, in: query, schema: { type: integer, minimum: 0 } }
   responses:
     Error:
       description: API error
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/Error' }
+          schema: { $ref: "#/components/schemas/Error" }
+  headers:
+    IdempotencyKeyExpiresAt:
+      description: ISO 8601 expiry time for the stored idempotent response
+      schema: { type: string, format: date-time }
   schemas:
     Error:
       type: object
@@ -397,7 +549,7 @@ components:
               name: { type: string }
               size: { type: integer, minimum: 1 }
               contentType: { type: string }
-              sha256: { type: string, pattern: '^[A-Fa-f0-9]{64}$' }
+              sha256: { type: string, pattern: "^[A-Fa-f0-9]{64}$" }
     CreateProjectRequest:
       type: object
       required: [prompt, clientSubmissionId, uploadIds]
@@ -412,15 +564,466 @@ components:
         project:
           type: object
           additionalProperties: true
-          required: [projectId, status, reportId]
+          required: [projectId, status, simulationId, reportId]
           properties:
             projectId: { type: string }
             graphId: { type: string }
-            simulationId: { type: string }
+            simulationId:
+              type: [string, "null"]
+              description: Null while the graph is being generated. Becomes a string before status changes to simulation_idle and before project.graph_ready is emitted.
             reportId: { type: string }
             status:
               type: string
-              enum: [graph_generating, graph_ready, simulation_idle, simulation_running, simulation_ready, report_generating, report_ready, failed]
+              enum:
+                [
+                  graph_generating,
+                  graph_ready,
+                  simulation_idle,
+                  simulation_running,
+                  simulation_ready,
+                  report_generating,
+                  report_ready,
+                  failed,
+                ]
+    AgentProfile:
+      type: object
+      additionalProperties: false
+      required: [id, name, role, platform, stance, motivation]
+      properties:
+        id: { type: string }
+        actorId: { type: string }
+        name: { type: string }
+        role: { type: string }
+        platform: { type: string, enum: [twitter, reddit] }
+        stance: { type: string }
+        motivation: { type: string }
+        sentimentBias: { type: number, minimum: -1, maximum: 1 }
+        influenceWeight: { type: number, exclusiveMinimum: 0 }
+        channelRole:
+          {
+            type: string,
+            enum:
+              [
+                media,
+                platform,
+                distributor,
+                influencer,
+                institutional_gatekeeper,
+                none,
+              ],
+          }
+    AgentAction:
+      type: object
+      additionalProperties: false
+      required:
+        [id, round, platform, actor, actionType, summary, timestampLabel]
+      properties:
+        id: { type: string }
+        actorId: { type: string }
+        round: { type: integer, minimum: 0 }
+        platform: { type: string, enum: [twitter, reddit] }
+        actor: { type: string }
+        actionType: { type: string }
+        summary: { type: string }
+        timestampLabel: { type: string }
+        success: { type: boolean }
+    Simulation:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          simulationId,
+          projectId,
+          graphId,
+          reportId,
+          status,
+          currentRound,
+          totalRounds,
+          progressPercent,
+          config,
+          profiles,
+          actions,
+          posts,
+        ]
+      properties:
+        simulationId: { type: string }
+        projectId: { type: string }
+        graphId: { type: string }
+        reportId: { type: string }
+        status:
+          {
+            type: string,
+            enum: [queued, preparing, idle, ready, running, completed, failed],
+          }
+        currentRound: { type: integer, minimum: 0 }
+        totalRounds: { type: integer, minimum: 0 }
+        progressPercent: { type: number, minimum: 0, maximum: 100 }
+        createdAt: { type: string, format: date-time }
+        startedAt: { type: string, format: date-time }
+        completedAt: { type: string, format: date-time }
+        error: { type: string }
+        errorCode: { type: string }
+        missingModules: { type: array, items: { type: string } }
+        config:
+          type: object
+          additionalProperties: false
+          required:
+            [
+              maxRounds,
+              minutesPerRound,
+              graphMemoryUpdates,
+              enabledPlatforms,
+              focus,
+            ]
+          properties:
+            maxRounds: { type: integer, minimum: 0 }
+            minutesPerRound: { type: integer, minimum: 1 }
+            graphMemoryUpdates: { type: boolean }
+            enabledPlatforms:
+              { type: array, items: { type: string, enum: [twitter, reddit] } }
+            focus: { type: string }
+        profiles:
+          { type: array, items: { $ref: "#/components/schemas/AgentProfile" } }
+        actions:
+          { type: array, items: { $ref: "#/components/schemas/AgentAction" } }
+        posts: { type: array, items: { type: object } }
+        analytics: { $ref: "#/components/schemas/SimulationAnalytics" }
+    NullableRatio:
+      type: [number, "null"]
+      minimum: 0
+      maximum: 1
+    NullableScore:
+      type: [number, "null"]
+      minimum: -1
+      maximum: 1
+    SimulationAnalytics:
+      type: object
+      additionalProperties: false
+      required:
+        [methodVersion, population, sentiment, propagation, channelResistance]
+      properties:
+        methodVersion: { type: string, const: simulation-aggregates.v1 }
+        population:
+          type: object
+          additionalProperties: false
+          required:
+            [
+              graphNodeCount,
+              simulatedActorCount,
+              activeActorCount,
+              positiveActorCount,
+              detractorActorCount,
+              neutralActorCount,
+              positiveRatio,
+              detractorRatio,
+              neutralRatio,
+              netDispositionScore,
+            ]
+          properties:
+            graphNodeCount: { type: integer, minimum: 0 }
+            simulatedActorCount: { type: integer, minimum: 0 }
+            activeActorCount: { type: integer, minimum: 0 }
+            positiveActorCount: { type: integer, minimum: 0 }
+            detractorActorCount: { type: integer, minimum: 0 }
+            neutralActorCount: { type: integer, minimum: 0 }
+            positiveRatio: { $ref: "#/components/schemas/NullableRatio" }
+            detractorRatio: { $ref: "#/components/schemas/NullableRatio" }
+            neutralRatio: { $ref: "#/components/schemas/NullableRatio" }
+            netDispositionScore: { $ref: "#/components/schemas/NullableScore" }
+        sentiment:
+          type: object
+          additionalProperties: false
+          required: [score, populationScore, activeConversationScore, basis]
+          properties:
+            score: { $ref: "#/components/schemas/NullableScore" }
+            populationScore: { $ref: "#/components/schemas/NullableScore" }
+            activeConversationScore:
+              { $ref: "#/components/schemas/NullableScore" }
+            basis:
+              {
+                type: string,
+                enum: [activity_weighted, population_weighted, unavailable],
+              }
+        propagation:
+          type: object
+          additionalProperties: false
+          required:
+            [
+              reachedActorCount,
+              reachRatio,
+              simulatedMinutes,
+              actorsPerSimulatedHour,
+              actionsPerSimulatedHour,
+              timeTo25PercentMinutes,
+              timeTo50PercentMinutes,
+              peakRound,
+            ]
+          properties:
+            reachedActorCount: { type: integer, minimum: 0 }
+            reachRatio: { $ref: "#/components/schemas/NullableRatio" }
+            simulatedMinutes: { type: integer, minimum: 0 }
+            actorsPerSimulatedHour: { type: number, minimum: 0 }
+            actionsPerSimulatedHour: { type: number, minimum: 0 }
+            timeTo25PercentMinutes: { type: [integer, "null"], minimum: 0 }
+            timeTo50PercentMinutes: { type: [integer, "null"], minimum: 0 }
+            peakRound: { type: [integer, "null"], minimum: 0 }
+        channelResistance:
+          type: object
+          additionalProperties: false
+          required:
+            [
+              channelActorCount,
+              resistantActorCount,
+              oppositionRatio,
+              resistanceActionCount,
+              amplificationActionCount,
+              behavioralResistanceRatio,
+            ]
+          properties:
+            channelActorCount: { type: integer, minimum: 0 }
+            resistantActorCount: { type: integer, minimum: 0 }
+            oppositionRatio: { $ref: "#/components/schemas/NullableRatio" }
+            resistanceActionCount: { type: integer, minimum: 0 }
+            amplificationActionCount: { type: integer, minimum: 0 }
+            behavioralResistanceRatio:
+              { $ref: "#/components/schemas/NullableRatio" }
+    Report:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          object,
+          schemaVersion,
+          reportId,
+          projectId,
+          graphId,
+          simulationId,
+          status,
+          progress,
+          content,
+          aggregates,
+          requestedAt,
+          completedAt,
+          error,
+          links,
+        ]
+      properties:
+        object: { type: string, const: report }
+        schemaVersion: { type: string, const: report.v1 }
+        reportId: { type: string }
+        projectId: { type: string }
+        graphId: { type: string }
+        simulationId: { type: string }
+        status: { type: string, enum: [queued, generating, completed, failed] }
+        progress:
+          type: object
+          additionalProperties: false
+          required: [percent, message, currentSection, completedSections]
+          properties:
+            percent: { type: number, minimum: 0, maximum: 100 }
+            message: { type: [string, "null"] }
+            currentSection: { type: [string, "null"] }
+            completedSections: { type: array, items: { type: string } }
+        content:
+          type: object
+          additionalProperties: false
+          required:
+            [
+              title,
+              executiveSummary,
+              predictions,
+              risks,
+              evidence,
+              keyActors,
+              fullReport,
+              markdown,
+            ]
+          properties:
+            title: { type: string }
+            executiveSummary: { type: array, items: { type: string } }
+            predictions: { type: array, items: { type: string } }
+            risks: { type: array, items: { type: string } }
+            evidence: { type: array, items: { type: string } }
+            keyActors: { type: array, items: { type: string } }
+            fullReport: { type: array, items: { type: string } }
+            markdown: { type: string }
+        aggregates: { $ref: "#/components/schemas/SimulationAnalytics" }
+        requestedAt: { type: [string, "null"], format: date-time }
+        completedAt: { type: [string, "null"], format: date-time }
+        error:
+          oneOf:
+            - type: "null"
+            - type: object
+              additionalProperties: false
+              required: [code, message]
+              properties:
+                code: { type: [string, "null"] }
+                message: { type: string }
+        links:
+          type: object
+          additionalProperties: false
+          required: [self, project, graph, simulation, sections, agentLog, chat]
+          properties:
+            self: { type: string }
+            project: { type: string }
+            graph: { type: string }
+            simulation: { type: string }
+            sections: { type: string }
+            agentLog: { type: string }
+            chat: { type: string }
+    InteractionMessage:
+      type: object
+      additionalProperties: false
+      required: [id, mode, role, speaker, content, createdAt]
+      properties:
+        id: { type: string }
+        mode: { type: string, enum: [report-agent, world-character] }
+        role: { type: string, enum: [user, assistant] }
+        speaker: { type: string }
+        content: { type: string }
+        createdAt: { type: string, format: date-time }
+    InteractionMessageList:
+      type: object
+      additionalProperties: false
+      required: [object, reportId, messages]
+      properties:
+        object: { type: string, const: list }
+        reportId: { type: string }
+        messages:
+          {
+            type: array,
+            items: { $ref: "#/components/schemas/InteractionMessage" },
+          }
+    WebhookProjectData:
+      type: object
+      additionalProperties: false
+      required:
+        [schemaVersion, projectId, graphId, simulationId, reportId, status]
+      properties:
+        schemaVersion: { type: string, const: webhook-data.v1 }
+        projectId: { type: string }
+        graphId: { type: string }
+        simulationId: { type: [string, "null"] }
+        reportId: { type: string }
+        status:
+          {
+            type: string,
+            enum:
+              [
+                graph_generating,
+                graph_ready,
+                simulation_idle,
+                simulation_running,
+                simulation_ready,
+                report_generating,
+                report_ready,
+                failed,
+              ],
+          }
+        currentRound: { type: integer, minimum: 0 }
+        totalRounds: { type: integer, minimum: 0 }
+        error: { type: string }
+        errorCode: { type: string }
+    WebhookSimulationData:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          schemaVersion,
+          projectId,
+          graphId,
+          simulationId,
+          reportId,
+          status,
+          currentRound,
+          totalRounds,
+          completedAt,
+          aggregates,
+          links,
+        ]
+      properties:
+        schemaVersion: { type: string, const: webhook-data.v1 }
+        projectId: { type: string }
+        graphId: { type: string }
+        simulationId: { type: string }
+        reportId: { type: string }
+        status: { type: string, enum: [completed, failed] }
+        currentRound: { type: integer, minimum: 0 }
+        totalRounds: { type: integer, minimum: 0 }
+        completedAt: { type: [string, "null"], format: date-time }
+        aggregates:
+          oneOf:
+            - type: "null"
+            - $ref: "#/components/schemas/SimulationAnalytics"
+        links:
+          type: object
+          additionalProperties: false
+          required: [project, graph, simulation, report]
+          properties:
+            project: { type: string }
+            graph: { type: string }
+            simulation: { type: string }
+            report: { type: string }
+    WebhookReportData:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          schemaVersion,
+          projectId,
+          graphId,
+          simulationId,
+          reportId,
+          status,
+          completedAt,
+          aggregates,
+          links,
+        ]
+      properties:
+        schemaVersion: { type: string, const: webhook-data.v1 }
+        projectId: { type: string }
+        graphId: { type: string }
+        simulationId: { type: string }
+        reportId: { type: string }
+        status: { type: string, enum: [completed, failed] }
+        completedAt: { type: [string, "null"], format: date-time }
+        aggregates: { $ref: "#/components/schemas/SimulationAnalytics" }
+        links:
+          type: object
+          additionalProperties: false
+          required: [self, project, graph, simulation, sections, agentLog, chat]
+          properties:
+            self: { type: string }
+            project: { type: string }
+            graph: { type: string }
+            simulation: { type: string }
+            sections: { type: string }
+            agentLog: { type: string }
+            chat: { type: string }
+    WebhookEnvelope:
+      type: object
+      additionalProperties: false
+      required: [id, type, created_at, schema_version, data]
+      properties:
+        id: { type: string, format: uuid }
+        type: { $ref: "#/components/schemas/WebhookEventType" }
+        created_at: { type: string, format: date-time }
+        schema_version: { type: string, const: webhook.v1 }
+        data:
+          description: Exact thin webhook-data.v1 payload. The event type selects the corresponding resource schema.
+          oneOf:
+            - $ref: "#/components/schemas/WebhookProjectData"
+            - $ref: "#/components/schemas/WebhookSimulationData"
+            - $ref: "#/components/schemas/WebhookReportData"
     WebhookEventType:
       type: string
-      enum: ['*', project.graph_ready, project.failed, simulation.completed, simulation.failed, report.completed, report.failed]
+      enum:
+        [
+          "*",
+          project.graph_ready,
+          project.failed,
+          simulation.completed,
+          simulation.failed,
+          report.completed,
+          report.failed,
+        ]

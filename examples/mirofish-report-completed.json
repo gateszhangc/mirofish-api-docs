@@ -1,0 +1,91 @@
+{
+  "object": "report",
+  "schemaVersion": "report.v1",
+  "reportId": "report_example_01",
+  "projectId": "project_example_01",
+  "graphId": "graph_example_01",
+  "simulationId": "sim_example_01",
+  "status": "completed",
+  "progress": {
+    "percent": 100,
+    "message": "Report completed.",
+    "currentSection": null,
+    "completedSections": [
+      "Executive summary",
+      "Predictions",
+      "Risks",
+      "Evidence"
+    ]
+  },
+  "content": {
+    "title": "Market Launch Response Forecast",
+    "executiveSummary": [
+      "Support forms quickly among high-influence media actors, while distributor resistance remains concentrated."
+    ],
+    "predictions": [
+      "Initial media amplification is likely to precede wider audience engagement."
+    ],
+    "risks": [
+      "Distributor objections may slow conversion even when public sentiment is positive."
+    ],
+    "evidence": [
+      "Two of four simulated actors performed successful propagation actions."
+    ],
+    "keyActors": ["Publisher", "Retailer"],
+    "fullReport": [
+      "The simulation indicates early narrative lift with a narrower channel-resistance pocket."
+    ],
+    "markdown": "# Market Launch Response Forecast\n\nThe simulation indicates early narrative lift with a narrower channel-resistance pocket."
+  },
+  "aggregates": {
+    "methodVersion": "simulation-aggregates.v1",
+    "population": {
+      "graphNodeCount": 12,
+      "simulatedActorCount": 4,
+      "activeActorCount": 2,
+      "positiveActorCount": 2,
+      "detractorActorCount": 1,
+      "neutralActorCount": 1,
+      "positiveRatio": 0.5,
+      "detractorRatio": 0.25,
+      "neutralRatio": 0.25,
+      "netDispositionScore": 0.25
+    },
+    "sentiment": {
+      "score": 0.3333,
+      "populationScore": 0.28,
+      "activeConversationScore": 0.3333,
+      "basis": "activity_weighted"
+    },
+    "propagation": {
+      "reachedActorCount": 2,
+      "reachRatio": 0.5,
+      "simulatedMinutes": 120,
+      "actorsPerSimulatedHour": 1,
+      "actionsPerSimulatedHour": 1,
+      "timeTo25PercentMinutes": 30,
+      "timeTo50PercentMinutes": 60,
+      "peakRound": 1
+    },
+    "channelResistance": {
+      "channelActorCount": 2,
+      "resistantActorCount": 1,
+      "oppositionRatio": 0.5,
+      "resistanceActionCount": 1,
+      "amplificationActionCount": 1,
+      "behavioralResistanceRatio": 0.5
+    }
+  },
+  "requestedAt": "2026-09-03T07:46:00.000Z",
+  "completedAt": "2026-09-03T08:00:00.000Z",
+  "error": null,
+  "links": {
+    "self": "/api/mirofish/reports/report_example_01",
+    "project": "/api/mirofish/projects/project_example_01",
+    "graph": "/api/mirofish/graphs/graph_example_01?projectId=project_example_01",
+    "simulation": "/api/mirofish/simulations/sim_example_01",
+    "sections": "/api/mirofish/reports/report_example_01/sections",
+    "agentLog": "/api/mirofish/reports/report_example_01/agent-log",
+    "chat": "/api/mirofish/reports/report_example_01/chat"
+  }
+}

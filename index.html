@@ -18,12 +18,13 @@
       <aside class="docs-toc" aria-label="On this page"><div class="toc-title">On this page</div><a href="#authentication">Authentication</a><a href="#credits">API credits</a><a href="#upload">1. Upload sources</a><a href="#project">2. Create a project</a><a href="#graph">3. Read the graph</a><a href="#simulation">4. Start a simulation</a><a href="#report">5. Generate a report</a><a href="#webhooks">Webhooks</a><a href="#javascript">JavaScript</a><a href="#python">Python</a><a href="#errors">Errors</a></aside>
       <article class="docs-content">
         <div class="section-kicker">Guides</div><h1>Integrate MiroFish into your backend.</h1>
-        <p class="lede">The API exposes the same workflow used by the MiroFish web application: source intake, ontology and graph construction, simulation, and report interaction.</p>
+        <p class="lede">The API exposes the same workflow used by the MiroFish web application: source intake, ontology and graph construction, simulation, and report interaction. This guide documents API contract version <code>1.2.0</code>.</p>
 
         <h2 id="authentication">Authentication</h2>
         <p>Create a key at <a href="https://mirofish.my/api-keys">mirofish.my/api-keys</a>. Store it in a secret manager and send it on every request:</p>
         <pre><code>Authorization: Bearer mf_live_...</code></pre>
         <p>Keys are shown in full only when created. API responses include <code>X-Request-Id</code>. State-changing calls accept <code>Idempotency-Key</code>; reuse the same value when retrying the same request.</p>
+        <p>An idempotency key is retained for 24 hours within the authenticated account, HTTP method, and request path. Identical content replays the original response, while reuse with different content returns <code>409</code>. Successful responses include <code>Idempotency-Key-Expires-At</code>.</p>
 
         <h2 id="credits">API credits</h2>
         <p>API credits are prepaid, account-level credits shared by all keys and separate from web subscriptions. The first accepted simulation start costs 100 credits. Project creation checks affordability but does not deduct; reads and report chat are not charged.</p>
@@ -63,7 +64,7 @@
     "clientSubmissionId":"submission-001",
     "uploadIds":["upload_..."]
   }'</code></pre>
-        <p>Poll <code>GET /api/mirofish/projects/{projectId}</code> until the project reaches <code>graph_ready</code> or <code>simulation_idle</code>.</p>
+        <p>Poll <code>GET /api/mirofish/projects/{projectId}</code> until the project reaches <code>graph_ready</code> or <code>simulation_idle</code>. The project object's <code>simulationId</code> is initially <code>null</code> while the graph is being generated. It becomes a string before the project reaches <code>simulation_idle</code> and before <code>project.graph_ready</code> is emitted.</p>
 
         <h2 id="graph">3. Read the graph</h2>
         <p>Once the graph is ready, retrieve the generated ontology and graph:</p>
@@ -73,7 +74,7 @@
         <pre><code>curl -X POST https://mirofish.my/api/mirofish/simulations/{simulationId}/start \
   -H "Authorization: Bearer $MIROFISH_API_KEY" \
   -H "Idempotency-Key: simulation-start-001"</code></pre>
-        <p>The first accepted start charges the account once. Repeating the same start is idempotent. Poll <code>GET /api/mirofish/simulations/{simulationId}</code> for status and progress. Intermediate product signals are available from the profiles, actions, posts, timeline, comments, and agent-stats endpoints in the reference.</p>
+        <p>Use the <code>simulationId</code> returned on the project object. The first accepted start charges the account once. Retrying the same start does not charge another 100 credits, including after the 24-hour idempotency-key window, because charging is also protected by the simulation-level billing ledger. Poll <code>GET /api/mirofish/simulations/{simulationId}</code> for status and progress. Intermediate product signals are available from the profiles, actions, posts, timeline, comments, and agent-stats endpoints in the reference.</p>
 
         <h2 id="report">5. Generate a report</h2>
         <pre><code>curl -X POST https://mirofish.my/api/mirofish/reports/{reportId} \
@@ -81,10 +82,43 @@
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: report-generate-001" \
   -d '{"forceRegenerate":false}'</code></pre>
-        <p>Read the report, sections, and sanitized agent log while it is generated. After completion, <code>POST /api/mirofish/reports/{reportId}/chat</code> supports the same <code>report-agent</code> and <code>world-character</code> modes as the web application.</p>
+        <p><code>POST</code> and <code>GET /api/mirofish/reports/{reportId}</code> return the same <code>report.v1</code> resource. A completed report includes generated content and deterministic <code>simulation-aggregates.v1</code> metrics:</p>
+        <ul>
+          <li>graph, simulated, active, supportive, detractor, and neutral actor counts and ratios;</li>
+          <li>population-weighted and activity-weighted sentiment;</li>
+          <li>reach ratio, propagation rates, 25% and 50% reach times, and peak round;</li>
+          <li>channel actor opposition, resistance, and amplification measures.</li>
+        </ul>
+        <p>Ratios without a denominator and reach thresholds that were not met are returned as <code>null</code>. If the completed action log is temporarily unavailable, the endpoint returns <code>503</code> with <code>error_code: simulation_analytics_unavailable</code> rather than guessed aggregates.</p>
+        <p><a href="examples/mirofish-report-completed.json">View a complete, sanitized completed-report response</a>. Read the report, sections, and sanitized agent log while it is generated. After completion, <code>POST /api/mirofish/reports/{reportId}/chat</code> supports the same <code>report-agent</code> and <code>world-character</code> modes as the web application.</p>
 
         <h2 id="webhooks">Webhooks</h2>
-        <p>Register an HTTPS endpoint for <code>project.graph_ready</code>, <code>simulation.completed</code>, or <code>report.completed</code>. The signing secret is returned once. Verify <code>v1</code> as HMAC-SHA256 of <code>&lt;timestamp&gt;.&lt;raw-request-body&gt;</code>, reject old timestamps, and deduplicate with <code>X-MiroFish-Event-Id</code>.</p>
+        <p>Register an HTTPS endpoint for <code>project.graph_ready</code>, <code>simulation.completed</code>, or <code>report.completed</code>. The signing secret is returned once. Every delivery includes:</p>
+        <pre><code>X-MiroFish-Event-Id: &lt;uuid&gt;
+X-MiroFish-Event-Type: report.completed
+X-MiroFish-Signature: t=&lt;unix-seconds&gt;,v1=&lt;hex-hmac&gt;</code></pre>
+        <p>There is no separate timestamp header. The timestamp is the <code>t</code> field in <code>X-MiroFish-Signature</code>. Verify <code>v1</code> as the hexadecimal HMAC-SHA256 of <code>&lt;timestamp&gt;.&lt;raw-request-body&gt;</code>, reject old timestamps, and deduplicate with <code>X-MiroFish-Event-Id</code>.</p>
+        <p>The JSON request body uses this envelope:</p>
+        <pre><code>{
+  "id": "&lt;event UUID&gt;",
+  "type": "simulation.completed",
+  "created_at": "2026-09-03T08:00:00.000Z",
+  "schema_version": "webhook.v1",
+  "data": {
+    "schemaVersion": "webhook-data.v1",
+    "projectId": "project_...",
+    "graphId": "graph_...",
+    "simulationId": "sim_...",
+    "reportId": "report_...",
+    "status": "completed",
+    "currentRound": 24,
+    "totalRounds": 24,
+    "completedAt": "2026-09-03T07:58:00.000Z",
+    "aggregates": {},
+    "links": {}
+  }
+}</code></pre>
+        <p><code>report.completed</code> uses the same envelope and identifiers. Its <code>data</code> contains report status, completion time, aggregates, and links to the report, project, graph, simulation, sections, agent log, and chat. Report Markdown is retrieved from the report link and is not duplicated in the webhook. Exact event-specific schemas are available in the <a href="reference.html">API Reference</a>.</p>
         <pre><code>curl -X POST https://mirofish.my/api/mirofish/webhooks \
   -H "Authorization: Bearer $MIROFISH_API_KEY" \
   -H "Content-Type: application/json" \
